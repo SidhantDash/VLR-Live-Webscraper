@@ -1,5 +1,7 @@
 import requests
 from lxml import html
+from functools import partial
+from mac_notifications import client
 
 match_url = 'https://www.vlr.gg/matches'
 
