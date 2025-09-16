@@ -21,9 +21,15 @@ tree = html.fromstring(response.content)
 # Checks if there is a live match going on
 def is_live_match():
     liveElement = tree.xpath('//a[contains(@class, "match-item") and div[contains(@class, "match-item-eta")]/div/div/text()="LIVE"]')
+
+    # Currently looks for "upcoming" for testing, change to "LIVE" when needed
+    href = tree.xpath('//a[contains(@class, "match-item") and div[contains(@class, "match-item-eta")]/div/div/text()="Upcoming"]/@href')
+    for link in href:
+        print("Upcoming match link:", link)
+
     return len(liveElement) > 0
 
     # for element in liveElement[:10]:
     #     print(element.text_content().strip())
 
-print("is live match?", is_live_match())
+print("Is live match?", is_live_match())
