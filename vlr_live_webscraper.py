@@ -20,9 +20,10 @@ tree = html.fromstring(response.content)
 
 # Checks if there is a live match going on
 def is_live_match():
-    liveElement = tree.xpath('//div[contains(@class, "ml-status") and contains(text(), "LIVE")]')
-    parentLiveElement = tree.xpath('..//div[contains(@class, "ml-status") and contains(text(), "LIVE")]')
-    for element in liveElement:
-        print(element.text_content().strip())
+    liveElement = tree.xpath('//a[contains(@class, "match-item") and div[contains(@class, "match-item-eta")]/div/div/text()="LIVE"]')
+    return len(liveElement) > 0
 
-is_live_match()
+    # for element in liveElement[:10]:
+    #     print(element.text_content().strip())
+
+print("is live match?", is_live_match())
