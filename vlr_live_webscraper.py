@@ -19,17 +19,44 @@ tree = html.fromstring(response.content)
 
 
 # Checks if there is a live match going on
-def is_live_match():
+def get_live_match():
     liveElement = tree.xpath('//a[contains(@class, "match-item") and div[contains(@class, "match-item-eta")]/div/div/text()="LIVE"]')
 
     # Currently looks for "upcoming" for testing, change to "LIVE" when needed
-    href = tree.xpath('//a[contains(@class, "match-item") and div[contains(@class, "match-item-eta")]/div/div/text()="Upcoming"]/@href')
+    href = tree.xpath('//a[contains(@class, "match-item") and div[contains(@class, "match-item-eta")]/div/div/text()="LIVE"]/@href')
     for link in href:
-        print("Upcoming match link:", link)
+        print("Live match link:", link)
 
-    return len(liveElement) > 0
+    if not href:
+        client.send_notification("No live matches currently.", "VLR.gg Live Match Notifier", sound="Ping")
 
-    # for element in liveElement[:10]:
-    #     print(element.text_content().strip())
+    return href[0] if href else None
 
-print("Is live match?", is_live_match())
+
+link = get_live_match()
+if link:
+    # If match is live, it automatically goes to currently played map
+
+    match_url = 'https://www.vlr.gg' + link
+    live_match_response = requests.get(match_url)
+    live_match_tree = html.fromstring(live_match_response.content)
+
+    match_score = live_match_tree.xpath('//div[contains(@class, "match-header-vs")]//text()')
+   
+    match_score_content = []
+    for content in match_score:
+        if content.strip() != "":
+            match_score_content.append(content.strip())
+    
+    first_team = match_score_content[0]
+    second_team = match_score_content[7]
+    first_team_score = match_score_content[2]
+    second_team_score = match_score_content[4]
+
+    print(f"{first_team} {first_team_score} - {second_team_score} {second_team}")
+
+    # match_rounds = live_match_tree.xpath('//div[contains(@class, "vm-stats-game mod-active")]//text()')
+    match_rounds = live_match_tree.xpath('//div[@class="vm-stats-game mod-active"]//text()')
+    for content in match_rounds:
+        if content.strip() != "":
+            print(content.strip())
