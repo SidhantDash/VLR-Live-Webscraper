@@ -27,17 +27,16 @@ def get_live_match():
     for link in href:
         print("Live match link:", link)
 
-    if not href:
-        client.send_notification("No live matches currently.", "VLR.gg Live Match Notifier", sound="Ping")
+    # if not href:
+    #     client.send_notification("No live matches currently.", "VLR.gg Live Match Notifier", sound="Ping")
 
     return href[0] if href else None
 
 
-link = get_live_match()
-if link:
-    # If match is live, it automatically goes to currently played map
-
-    match_url = 'https://www.vlr.gg' + link
+def get_score(link, isLive):
+    # match_url = 'https://www.vlr.gg' + link
+    # Test different matches
+    match_url = 'https://www.vlr.gg/542197/paper-rex-vs-giantx-valorant-champions-2025-winners-a/?map=1'
     live_match_response = requests.get(match_url)
     live_match_tree = html.fromstring(live_match_response.content)
 
@@ -55,8 +54,51 @@ if link:
 
     print(f"{first_team} {first_team_score} - {second_team_score} {second_team}")
 
+    if not isLive:
+        match_rounds = live_match_tree.xpath('//div[@class="vm-stats-game-header"]//div[contains(@class, "score")]//text()')
+        maps_played = live_match_tree.xpath('//div[@class="vm-stats-game-header"]//div[@class="map"]//span/text()')
+        
+        # counter used to determine 
+        counter = 0
+        map_score = []
+        all_map_scores = []
+        for score in match_rounds:            
+            if score.strip() != "":
+                if counter < 2:
+                    map_score.append(score)
+                    counter += 1
+                    
+                    if counter == 2:
+                        all_map_scores.append(map_score)
+
+                else:                    
+                    map_score.clear()
+                    map_score.append(score)
+                    counter = 1                    
+        print(all_map_scores)
+
+
+        maps = []
+        for map in maps_played:
+            if map.strip() != "" and map.strip() != "PICK":
+                maps.append(map.strip())
+        print(maps)
+
+link = get_live_match()
+if link:
+    # If match is live, it automatically goes to currently played map
+    get_score(link, True)
+
+    
     # match_rounds = live_match_tree.xpath('//div[contains(@class, "vm-stats-game mod-active")]//text()')
-    match_rounds = live_match_tree.xpath('//div[@class="vm-stats-game mod-active"]//text()')
-    for content in match_rounds:
-        if content.strip() != "":
-            print(content.strip())
+    # match_rounds = live_match_tree.xpath('//div[@class="vm-stats-game mod-active"]//text()')
+    # for content in match_rounds:
+    #     if content.strip() != "":
+    #         print(content.strip())
+else:
+    print("No live matches currently.")
+    results_url = 'https://www.vlr.gg/matches/results'
+    results_response = requests.get(results_url)
+    results_tree = html.fromstring(results_response.content)
+    recent_match = results_tree.xpath('//a[contains(@class, "match-item")]/@href')
+    get_score(recent_match[0], False)
