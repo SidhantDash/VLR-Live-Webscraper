@@ -51,6 +51,7 @@ def get_score(link, isLive):
     second_team_score = match_score_content[4]
 
     print(f"{first_team} {first_team_score} - {second_team_score} {second_team}")
+    score = f"{first_team} {first_team_score} - {second_team_score} {second_team}"
 
     match_rounds = live_match_tree.xpath('//div[@class="vm-stats-game-header"]//div[contains(@class, "score")]//text()')
     maps_played = live_match_tree.xpath('//div[@class="vm-stats-game-header"]//div[@class="map"]//span/text()')
@@ -59,8 +60,8 @@ def get_score(link, isLive):
     counter = 0
     map_score = []
     all_map_scores = []
-    for score in match_rounds:
-        map_score.append(score)                        
+    for round_score in match_rounds:
+        map_score.append(round_score)                        
         counter += 1
         
         if counter == 2:
@@ -78,6 +79,8 @@ def get_score(link, isLive):
             maps.append(map.strip())
     print(maps)
 
+    return score
+
 
 def get_match():
     match_url = 'https://www.vlr.gg/matches'
@@ -85,10 +88,11 @@ def get_match():
     response = requests.get(match_url)
     tree = html.fromstring(response.content)
 
+    live_score = ""
     link = get_live_match(tree)
     if link:
         # If match is live, it automatically goes to currently played map
-        get_score(link, True)
+        live_score = get_score(link, True)
 
         
         # match_rounds = live_match_tree.xpath('//div[contains(@class, "vm-stats-game mod-active")]//text()')
@@ -98,14 +102,27 @@ def get_match():
         #         print(content.strip())
     else:
         print("No live matches currently.")
-        results_url = 'https://www.vlr.gg/matches/results'
-        results_response = requests.get(results_url)
-        results_tree = html.fromstring(results_response.content)
-        recent_match = results_tree.xpath('//a[contains(@class, "match-item")]/@href')
-        get_score(recent_match[0], False)
-
+    
+    results_url = 'https://www.vlr.gg/matches/results'
+    results_response = requests.get(results_url)
+    results_tree = html.fromstring(results_response.content)
+    recent_match = results_tree.xpath('//a[contains(@class, "match-item")]/@href')
+    past_score = get_score(recent_match[0], False)
+    return live_score, past_score
 
 if __name__ == "__main__":
-    get_match()
+    live_score, past_score = get_match()
     # client.create_notification(title="Meeting starts now!", subtitle="Team Standup")
-    pync.notify('Hello from Python!', title='VLR', sender="org.sidhantdash.VlrLiveWebscraper12")
+    if live_score != "":
+        pync.notify(
+            live_score,
+            title='🔴 LIVE Match 🔴',
+            sender="org.sidhantdash.VlrLiveWebscraper12")
+        
+    past_text = past_score + '\n'
+    pync.notify(
+        past_score,
+        title='Past Match',
+        sender="org.sidhantdash.VlrLiveWebscraper12")
+    
+    
