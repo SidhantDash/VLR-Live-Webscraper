@@ -79,7 +79,7 @@ def get_score(link, isLive):
             maps.append(map.strip())
     print(maps)
 
-    return score
+    return score, all_map_scores, maps
 
 
 def get_match():
@@ -89,11 +89,19 @@ def get_match():
     tree = html.fromstring(response.content)
 
     live_score = ""
+    live_map_scores = []
+    live_maps = []
     link = get_live_match(tree)
     if link:
         # If match is live, it automatically goes to currently played map
-        live_score = get_score(link, True)
+        live_score, live_map_scores, live_maps = get_score(link, True)
 
+        live_text = live_score + '\n' + ", ".join(str(x) for x in live_maps) + '\n' + ", ".join(str(x) for x in live_map_scores)
+        pync.notify(
+            live_text,
+            title='🔴 LIVE Match 🔴',
+            sender="org.sidhantdash.VlrLiveWebscraper12")
+        time.sleep(10)
         
         # match_rounds = live_match_tree.xpath('//div[contains(@class, "vm-stats-game mod-active")]//text()')
         # match_rounds = live_match_tree.xpath('//div[@class="vm-stats-game mod-active"]//text()')
@@ -102,27 +110,30 @@ def get_match():
         #         print(content.strip())
     else:
         print("No live matches currently.")
-    
-    results_url = 'https://www.vlr.gg/matches/results'
-    results_response = requests.get(results_url)
-    results_tree = html.fromstring(results_response.content)
-    recent_match = results_tree.xpath('//a[contains(@class, "match-item")]/@href')
-    past_score = get_score(recent_match[0], False)
-    return live_score, past_score
+    def get_past_match(match_index):
+        results_url = 'https://www.vlr.gg/matches/results'
+        results_response = requests.get(results_url)
+        results_tree = html.fromstring(results_response.content)
+        recent_match = results_tree.xpath('//a[contains(@class, "match-item")]/@href')
+        past_score, past_map_scores, past_maps = get_score(recent_match[match_index], False)
+        past_text = past_score + '\n' + ", ".join(str(x) for x in past_maps) + '\n' + ", ".join(str(x) for x in past_map_scores)
+        pync.notify(
+            past_text,
+            title='🟦 Past Match 🟦',
+            sender="org.sidhantdash.VlrLiveWebscraper12")
+        time.sleep(5)
+    get_past_match(0)
+    get_past_match(1)
 
 if __name__ == "__main__":
-    live_score, past_score = get_match()
+    get_match()
     # client.create_notification(title="Meeting starts now!", subtitle="Team Standup")
-    if live_score != "":
-        pync.notify(
-            live_score,
-            title='🔴 LIVE Match 🔴',
-            sender="org.sidhantdash.VlrLiveWebscraper12")
-        
-    past_text = past_score + '\n'
-    pync.notify(
-        past_score,
-        title='Past Match',
-        sender="org.sidhantdash.VlrLiveWebscraper12")
+    # if live_score != "":
+
+    #     live_text = live_score + '\n'
+    #     pync.notify(
+    #         live_score,
+    #         title='🔴 LIVE Match 🔴',
+    #         sender="org.sidhantdash.VlrLiveWebscraper12")
     
     
