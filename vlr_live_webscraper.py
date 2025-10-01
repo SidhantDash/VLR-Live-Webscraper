@@ -100,7 +100,7 @@ def get_match():
         pync.notify(
             live_text,
             title='🔴 LIVE Match 🔴',
-            sender="org.sidhantdash.VlrLiveWebscraper12")
+            sender="org.sidhantdash.vlrscraper")
         time.sleep(10)
         
         # match_rounds = live_match_tree.xpath('//div[contains(@class, "vm-stats-game mod-active")]//text()')
@@ -109,7 +109,11 @@ def get_match():
         #     if content.strip() != "":
         #         print(content.strip())
     else:
-        print("No live matches currently.")
+        pync.notify(
+            "No live matches currently.",
+            title='⚫️Not LIVE⚫️',
+            sender="org.sidhantdash.vlrscraper"
+        )
     def get_past_match(match_index):
         results_url = 'https://www.vlr.gg/matches/results'
         results_response = requests.get(results_url)
@@ -120,8 +124,8 @@ def get_match():
         pync.notify(
             past_text,
             title='🟦 Past Match 🟦',
-            sender="org.sidhantdash.VlrLiveWebscraper12")
-        time.sleep(5)
+            sender="org.sidhantdash.vlrscraper")
+        time.sleep(10)
     get_past_match(0)
     get_past_match(1)
 
